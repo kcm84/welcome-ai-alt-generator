@@ -4,16 +4,30 @@ body {
   color: #333;
   margin: 0;
   padding: 0;
+  line-height: 1.6;
 }
 
 .container {
-  max-width: 600px;
-  margin: 50px auto;
+  max-width: 700px;
+  margin: 30px auto;
   padding: 30px;
   background: #fff;
   border-radius: 10px;
   box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+h1, h2 {
+  color: #0078ff;
   text-align: center;
+}
+
+.intro {
+  margin-bottom: 20px;
+}
+
+.intro ul {
+  text-align: left;
+  margin: 10px 0 20px 20px;
 }
 
 button {
@@ -32,6 +46,7 @@ button:hover {
 
 #preview {
   margin-top: 20px;
+  text-align: center;
 }
 
 #preview img {
@@ -44,5 +59,23 @@ button:hover {
   margin-top: 5px;
   font-weight: bold;
   color: #0078ff;
-  white-space: pre-wrap; /* OCR 텍스트 줄바꿈 유지 */
+  white-space: pre-wrap;
+}
+
+#altTagBox {
+  margin-top: 15px;
+  background: #f3f3f3;
+  padding: 10px;
+  border-radius: 6px;
+  text-align: left;
+}
+
+#altTagBox code {
+  display: block;
+  margin-bottom: 8px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  word-break: break-word;
 }

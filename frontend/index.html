@@ -3,16 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome AI Alt Generator</title>
+  <title>웰컴저축은행 AI 챌린지</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <h1>Welcome AI Alt Generator</h1>
-    <p>
-      Alt tag란 이미지를 설명하는 텍스트로, 웹 접근성과 SEO에 꼭 필요합니다.<br>
-      이 도구는 이미지 안의 텍스트(OCR)를 추출하거나, 텍스트가 없으면 이미지를 설명해줍니다.
-    </p>
+    <h1>웰컴저축은행 AI Alt Generator System</h1>
+    <section class="intro">
+      <h2>Alt tag란 무엇일까요?</h2>
+      <p>
+        Alt tag는 <strong>이미지의 대체 텍스트</strong>를 의미합니다.  
+        시각장애인이 스크린 리더를 사용할 때 이미지를 대신 설명해주고,  
+        이미지가 로딩되지 않을 경우 텍스트로 내용을 전달합니다.  
+      </p>
+      <p>
+        <strong>왜 중요할까요?</strong>
+      </p>
+      <ul>
+        <li><strong>웹 접근성:</strong> 시각장애인·저시력 사용자도 동일한 경험 제공</li>
+        <li><strong>SEO:</strong> 검색 엔진이 이미지를 이해하고 검색 노출에 도움</li>
+        <li><strong>UX:</strong> 네트워크 불안정 시에도 이미지 내용을 전달</li>
+      </ul>
+      <p>
+        하지만 Alt tag를 작성하는 일은 종종 번거롭습니다.  
+        이 도구는 이미지를 업로드하면 <strong>OCR로 텍스트를 추출</strong>하거나,  
+        텍스트가 없을 경우 <strong>이미지를 설명</strong>하여 Alt tag를 자동으로 생성해줍니다.
+      </p>
+    </section>
+
+    <section class="model-info">
+      <h2>사용한 AI 모델</h2>
+      <p>
+        이 프로젝트에서는 알리바바 그룹이 개발한 <strong>Qwen2.5-VL-Instruct</strong> 모델을 사용합니다.  
+        이 모델은 <em>비전-언어 모델(Vision-Language Model, VLM)</em>로, 
+        이미지를 이해하고 텍스트를 읽는 능력(OCR)과, 이미지의 장면을 설명하는 능력을 동시에 가지고 있습니다.
+        따라서 사진 속 글자를 추출하거나, 텍스트가 없을 경우 장면을 분석해 자연스러운 설명을 생성할 수 있습니다.
+      </p>
+      <ul>
+        <li>📝 <strong>OCR 기능</strong>: 이미지 속 글자를 인식하여 추출</li>
+        <li>🖼️ <strong>이미지 설명</strong>: 텍스트가 없을 때 장면을 자연스럽게 설명</li>
+        <li>🌐 <strong>활용성</strong>: 웹 접근성과 SEO 개선에 바로 적용 가능</li>
+      </ul>
+      <p>
+        Alt tag 생성 과정에서 이 모델이 이미지를 분석하여 
+        <strong>100자 내외의 설명</strong>을 자동으로 생성합니다.
+      </p>
+    </section>
+
+    <hr>
 
     <input type="file" id="imageInput" accept="image/*">
     <button id="generateBtn">Alt tag 생성</button>
@@ -21,6 +59,12 @@
       <img id="previewImage" src="" alt="">
       <p><strong>생성된 Alt 텍스트:</strong></p>
       <p id="altText"></p>
+
+      <div id="altTagBox" style="display:none;">
+        <p><strong>Alt tag 예시:</strong></p>
+        <code id="altTagCode"></code>
+        <button id="copyBtn">복사하기</button>
+      </div>
     </div>
   </div>
   <script src="script.js"></script>
