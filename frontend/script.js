@@ -12,7 +12,7 @@ generateBtn.addEventListener("click", async () => {
   previewImage.src = URL.createObjectURL(imageInput.files[0]);
   altText.textContent = "생성 중...";
 
-  const res = await fetch("https://YOUR_RENDER_URL.onrender.com/api/generate-alt", {
+  const res = await fetch("https://welcome-ai-alt-generator-backend.onrender.com/api/generate-alt", {
     method: "POST",
     body: formData
   });
