@@ -18,22 +18,35 @@ async function generateAltTag(imagePath) {
   const data = new FormData();
   data.append("inputs", fs.createReadStream(imagePath));
 
-  const response = await axios.post(
-    "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-VL-Instruct",
-    data,
-    {
-      headers: {
-        Authorization: `Bearer ${HUGGING_FACE_API_KEY}`,
-        ...data.getHeaders(),
-      },
-    }
-  );
+  try {
+    const response = await axios.post(
+      "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-VL-Instruct",
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${HUGGING_FACE_API_KEY}`,
+          ...data.getHeaders(),
+        },
+      }
+    );
 
-  // 모델 응답에서 Alt tag 텍스트 추출
-  return response.data?.[0]?.generated_text || "Alt tag 생성 실패";
+    // 모델 응답에서 텍스트 추출
+    if (Array.isArray(response.data) && response.data.length > 0) {
+      return response.data[0].generated_text || "Alt tag 생성 실패";
+    }
+    return "Alt tag 생성 실패";
+  } catch (error) {
+    console.error("Hugging Face API 호출 에러:", error.response?.data || error.message);
+    return "Alt tag 생성 중 오류 발생";
+  }
 }
 
-// API 엔드포인트
+// 루트 경로 - 헬스체크용
+app.get("/", (req, res) => {
+  res.send("✅ Welcome AI Alt Generator backend is running");
+});
+
+// Alt tag 생성 API
 app.post("/api/generate-alt", upload.single("image"), async (req, res) => {
   try {
     const altTag = await generateAltTag(req.file.path);
@@ -45,5 +58,6 @@ app.post("/api/generate-alt", upload.single("image"), async (req, res) => {
   }
 });
 
+// 서버 실행
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
