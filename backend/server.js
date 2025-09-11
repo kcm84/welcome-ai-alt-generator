@@ -20,7 +20,7 @@ async function generateAltTag(imagePath) {
 
   try {
     const response = await axios.post(
-      "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-VL-Instruct",
+      "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-VL-7B-Instruct",
       data,
       {
         headers: {
