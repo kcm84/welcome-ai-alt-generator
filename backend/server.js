@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import multer from "multer";
 import fs from "fs";
+import sharp from "sharp";
 import { OpenAI } from "openai";
 
 const app = express();
@@ -10,20 +11,28 @@ app.use(cors());
 app.use(express.json());
 
 // Hugging Face Access Token (Render 환경 변수에 설정 필요)
-const HF_TOKEN = process.env.HUGGING_FACE_API_KEY;
+// Render에서는 OPENAI_API_KEY로 등록하세요.
+const HF_TOKEN = process.env.OPENAI_API_KEY;
 
 // Hugging Face Router OpenAI 호환 클라이언트 생성
 const client = new OpenAI({
   baseURL: "https://router.huggingface.co/v1",
-  apiKey: HF_TOKEN,  // 🔑 환경 변수 이름을 명시적으로 지정
+  apiKey: HF_TOKEN,
 });
 
 // Alt tag 생성 함수
 async function generateAltTag(imagePath) {
   try {
-    const imageBuffer = fs.readFileSync(imagePath);
-    const base64Image = `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
+    // 이미지 크기 줄이기 (512px 폭, JPEG 변환)
+    const resizedBuffer = await sharp(imagePath)
+      .resize({ width: 512, withoutEnlargement: true })
+      .jpeg({ quality: 80 })
+      .toBuffer();
 
+    // Base64 Data URI 변환
+    const base64Image = `data:image/jpeg;base64,${resizedBuffer.toString("base64")}`;
+
+    // Hugging Face Router 호출
     const chatCompletion = await client.chat.completions.create({
       model: "Qwen/Qwen2.5-VL-7B-Instruct:hyperbolic",
       messages: [
@@ -32,9 +41,10 @@ async function generateAltTag(imagePath) {
           content: [
             {
               type: "text",
-              text: "당신은 OCR + 이미지 설명 도우미입니다.\n" +
-                    "1. 만약 이미지 안에 글자가 보이면, 모든 글자를 정확히 추출하여 출력하세요.\n" +
-                    "2. 만약 글자가 없다면, 이미지를 분석해서 100자 내외로 설명하세요."
+              text:
+                "당신은 OCR + 이미지 설명 도우미입니다.\n" +
+                "1. 만약 이미지 안에 글자가 보이면, 모든 글자를 정확히 추출하여 출력하세요.\n" +
+                "2. 만약 글자가 없다면, 이미지를 분석해서 100자 내외로 설명하세요.",
             },
             { type: "image_url", image_url: { url: base64Image } },
           ],
@@ -44,14 +54,18 @@ async function generateAltTag(imagePath) {
 
     return chatCompletion.choices[0].message.content || "Alt tag 생성 실패";
   } catch (error) {
-    console.error("⚠️ Hugging Face Router API 호출 에러:", error.response?.status, error.response?.data || error.message);
+    console.error(
+      "⚠️ Hugging Face Router API 호출 에러:",
+      error.response?.status,
+      error.response?.data || error.message
+    );
     return "Alt tag 생성 중 오류 발생";
   }
 }
 
 // 헬스체크 라우트
 app.get("/", (req, res) => {
-  res.send("✅ Welcome AI Alt Generator backend is running (using Hugging Face Router)");
+  res.send("✅ Welcome AI Alt Generator backend is running (with OCR/Caption logic + Sharp resize)");
 });
 
 // Alt tag 생성 API

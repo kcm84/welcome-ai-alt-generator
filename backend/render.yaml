@@ -3,9 +3,10 @@ services:
     name: welcome-ai-alt-backend
     env: node
     plan: free
+    rootDir: backend
     buildCommand: npm install
     startCommand: npm start
     autoDeploy: true
     envVars:
-      - key: HUGGING_FACE_API_KEY
+      - key: OPENAI_API_KEY
         sync: false
