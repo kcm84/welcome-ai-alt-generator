@@ -21,18 +21,21 @@ const client = new OpenAI({
 // Alt tag 생성 함수
 async function generateAltTag(imagePath) {
   try {
-    // 업로드된 파일을 base64 Data URI 로 변환
     const imageBuffer = fs.readFileSync(imagePath);
     const base64Image = `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
 
     const chatCompletion = await client.chat.completions.create({
-      // Qwen 멀티모달 모델 + hyperbolic provider
       model: "Qwen/Qwen2.5-VL-7B-Instruct:hyperbolic",
       messages: [
         {
           role: "user",
           content: [
-            { type: "text", text: "이 이미지를 짧은 Alt tag 문장으로 설명해줘." },
+            {
+              type: "text",
+              text: "당신은 OCR + 이미지 설명 도우미입니다.\n" +
+                    "1. 만약 이미지 안에 글자가 보이면, 모든 글자를 정확히 추출하여 출력하세요.\n" +
+                    "2. 만약 글자가 없다면, 이미지를 분석해서 100자 내외로 설명하세요."
+            },
             { type: "image_url", image_url: { url: base64Image } },
           ],
         },
