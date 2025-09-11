@@ -42,10 +42,9 @@ async function generateAltTag(imagePath) {
             {
               type: "text",
               text:
-                "당신은 OCR + 이미지 설명 도우미입니다.\n" +
+                "당신은 OCR + 이미지 설명 전문가입니다.\n" +
                 "1. 이미지 안에 보이는 모든 글자를 빠짐없이 추출하세요.\n" +
-                "2. 글자가 어디에 위치하는지 간단히 설명하세요.\n" +
-                "3. 글자 외 장면도 함께 설명하여 Alt tag 문장을 만들어주세요."
+                "2. 글자가 없다면 이미지를 분석해서 100자 내외로 간단히 설명하세요."
             },
             { type: "image_url", image_url: { url: base64Image } },
           ],
