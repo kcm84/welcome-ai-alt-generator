@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: welcome-ai-alt-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: HUGGING_FACE_API_KEY
+        sync: false
