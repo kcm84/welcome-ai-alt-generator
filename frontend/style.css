@@ -37,10 +37,12 @@ button:hover {
 #preview img {
   max-width: 100%;
   border-radius: 10px;
+  margin-bottom: 10px;
 }
 
 #altText {
-  margin-top: 10px;
+  margin-top: 5px;
   font-weight: bold;
   color: #0078ff;
+  white-space: pre-wrap; /* OCR 텍스트 줄바꿈 유지 */
 }
