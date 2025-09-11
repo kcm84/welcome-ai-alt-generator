@@ -1,49 +1,55 @@
-const express = require("express");
-const axios = require("axios");
-const cors = require("cors");
-const multer = require("multer");
-const FormData = require("form-data");
-const fs = require("fs");
+import express from "express";
+import cors from "cors";
+import multer from "multer";
+import fs from "fs";
+import path from "path";
+import { OpenAI } from "openai";
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
 app.use(cors());
 app.use(express.json());
 
-// Hugging Face API Key (Render 환경 변수에서 가져오기)
-const HUGGING_FACE_API_KEY = process.env.HUGGING_FACE_API_KEY;
+// Hugging Face Access Token (환경 변수에서 가져오기)
+const HF_TOKEN = process.env.HUGGING_FACE_API_KEY;
 
-// Hugging Face Qwen2.5-VL-Instruct 호출 함수
+// Hugging Face Router OpenAI 호환 클라이언트 생성
+const client = new OpenAI({
+  baseURL: "https://router.huggingface.co/v1",
+  apiKey: HF_TOKEN,
+});
+
+// Alt tag 생성 함수
 async function generateAltTag(imagePath) {
-  const data = new FormData();
-  data.append("inputs", fs.createReadStream(imagePath));
-
   try {
-    const response = await axios.post(
-      "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-VL-7B-Instruct",
-      data,
-      {
-        headers: {
-          Authorization: `Bearer ${HUGGING_FACE_API_KEY}`,
-          ...data.getHeaders(),
-        },
-      }
-    );
+    // 업로드된 파일을 public URL 대신 base64로 읽어 전달
+    const imageBuffer = fs.readFileSync(imagePath);
+    const base64Image = `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
 
-    // 모델 응답에서 텍스트 추출
-    if (Array.isArray(response.data) && response.data.length > 0) {
-      return response.data[0].generated_text || "Alt tag 생성 실패";
-    }
-    return "Alt tag 생성 실패";
+    const chatCompletion = await client.chat.completions.create({
+      // 모델 이름 + provider (hyperbolic) 지정
+      model: "Qwen/Qwen2.5-VL-7B-Instruct:hyperbolic",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Describe this image in one short alt-text sentence (Korean if possible)." },
+            { type: "image_url", image_url: { url: base64Image } },
+          ],
+        },
+      ],
+    });
+
+    return chatCompletion.choices[0].message.content || "Alt tag 생성 실패";
   } catch (error) {
-    console.error("Hugging Face API 호출 에러:", error.response?.data || error.message);
+    console.error("Hugging Face Router API 호출 에러:", error.response?.status, error.response?.data || error.message);
     return "Alt tag 생성 중 오류 발생";
   }
 }
 
-// 루트 경로 - 헬스체크용
+// 헬스체크 라우트
 app.get("/", (req, res) => {
-  res.send("✅ Welcome AI Alt Generator backend is running");
+  res.send("✅ Welcome AI Alt Generator backend is running (using Hugging Face Router)");
 });
 
 // Alt tag 생성 API
