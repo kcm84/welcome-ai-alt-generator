@@ -4,16 +4,15 @@ from paddleocr import PaddleOCR
 
 app = Flask(__name__)
 
-# PaddleOCR 초기화 (최신 버전 호환)
-# use_angle_cls → use_textline_orientation
+# 최신 PaddleOCR 초기화 (use_gpu 제거, use_textline_orientation 사용)
 ocr = PaddleOCR(
     lang='korean',
-    use_textline_orientation=True  # 최신 버전에서 권장되는 옵션
+    use_textline_orientation=True
 )
 
 @app.route("/")
 def health():
-    return "OCR Service Running ✅"
+    return "✅ OCR Service Running"
 
 @app.route("/ocr", methods=["POST"])
 def run_ocr():
@@ -36,5 +35,5 @@ def run_ocr():
     return jsonify({"ocr_text": " ".join(texts)})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5001))
+    port = int(os.environ.get("PORT", 5001))  # Render에서 지정하는 포트 사용
     app.run(host="0.0.0.0", port=port)
