@@ -4,7 +4,6 @@ import multer from "multer";
 import fs from "fs";
 import sharp from "sharp";
 import fetch from "node-fetch";
-import FormData from "form-data";
 import { OpenAI } from "openai";
 
 const app = express();
@@ -12,49 +11,46 @@ const upload = multer({ dest: "uploads/" });
 app.use(cors());
 app.use(express.json());
 
-// Hugging Face Router (Qwen 멀티모달) API 키
-const HF_TOKEN = process.env.OPENAI_API_KEY;
+// Hugging Face API 토큰 (한 개만 발급받아서 두 곳에 공용으로 사용 가능)
+const HF_TOKEN = process.env.HF_TOKEN;
+const OPENAI_API_KEY = process.env.HF_TOKEN;
+
+// Hugging Face Router (Qwen 멀티모달 호출)
 const client = new OpenAI({
   baseURL: "https://router.huggingface.co/v1",
-  apiKey: HF_TOKEN,
+  apiKey: OPENAI_API_KEY, // 같은 키 재사용
 });
 
-// ⚠️ Render에 배포된 PaddleOCR 서비스 URL
-const OCR_SERVICE_URL = "https://welcome-ai-alt-generator-ocr.onrender.com/ocr";
+// -------------------------
+// Hugging Face OCR: ko-trocr-base-nsmc-news-chatbot
+// -------------------------
+async function runKoTrOCR(imagePath) {
+  const imageBytes = fs.readFileSync(imagePath);
 
-// OCR API 호출 (재시도 포함)
-async function runOCR(imagePath, retries = 3) {
-  const formData = new FormData();
-  formData.append("image", fs.createReadStream(imagePath));
-
-  try {
-    const res = await fetch(OCR_SERVICE_URL, {
+  const response = await fetch(
+    "https://api-inference.huggingface.co/models/daekeun-ml/ko-trocr-base-nsmc-news-chatbot",
+    {
       method: "POST",
-      body: formData,
-      headers: formData.getHeaders(), // 올바른 Content-Type 설정
-    });
-
-    if (!res.ok) {
-      throw new Error(`OCR API 오류: ${res.status} ${await res.text()}`);
+      headers: {
+        Authorization: `Bearer ${HF_TOKEN}`,
+        "Content-Type": "application/octet-stream",
+      },
+      body: imageBytes,
     }
+  );
 
-    const data = await res.json();
-    return {
-      texts: data.ocr_texts || [],
-      joined: data.ocr_text_joined || "",
-    };
-  } catch (err) {
-    console.error("OCR 호출 실패:", err.message);
-    if (retries > 0) {
-      console.log(`🔄 OCR 재시도 (${3 - retries + 1})...`);
-      await new Promise((r) => setTimeout(r, 2000)); // 2초 대기 후 재시도
-      return runOCR(imagePath, retries - 1);
-    }
-    return { texts: [], joined: "" };
+  if (!response.ok) {
+    console.error("ko-TrOCR API 오류:", response.status, await response.text());
+    return "";
   }
+
+  const result = await response.json();
+  return result[0]?.generated_text || "";
 }
 
-// Qwen 멀티모달 호출
+// -------------------------
+// Qwen 멀티모달 (Alt tag 생성)
+// -------------------------
 async function runVLModel(imagePath, ocrText) {
   const resizedBuffer = await sharp(imagePath)
     .resize({ width: 512 })
@@ -86,13 +82,20 @@ async function runVLModel(imagePath, ocrText) {
   return chatCompletion.choices[0].message.content || "Alt tag 생성 실패";
 }
 
+// -------------------------
 // Alt tag API 엔드포인트
+// -------------------------
 app.post("/api/generate-alt", upload.single("image"), async (req, res) => {
   try {
-    const { texts, joined } = await runOCR(req.file.path);
-    const altTag = await runVLModel(req.file.path, joined);
+    // OCR 먼저 실행
+    const ocrText = await runKoTrOCR(req.file.path);
+
+    // Qwen으로 Alt tag 생성
+    const altTag = await runVLModel(req.file.path, ocrText);
+
     fs.unlinkSync(req.file.path); // 임시 파일 삭제
-    res.json({ altTag, ocrTexts: texts });
+
+    res.json({ altTag, ocrText });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Alt tag 생성 실패" });
@@ -101,5 +104,5 @@ app.post("/api/generate-alt", upload.single("image"), async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () =>
-  console.log(`🚀 addleOCR+Qwen backend running on port ${PORT}`)
+  console.log(`🚀 Backend running on ${PORT}`)
 );
