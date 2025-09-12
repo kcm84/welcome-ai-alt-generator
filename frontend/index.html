@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Welcome AI Alt Generator</title>
+
+  <!-- ⬇️ 백엔드 절대 URL을 반드시 설정하세요 -->
+  <meta name="backend-url" content="https://welcome-ai-alt-generator-backend.onrender.com">
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -59,17 +63,13 @@
       cursor: pointer;
       font-size: 1rem;
     }
-    input[type="file"] {
-      display: none;
-    }
+    input[type="file"] { display: none; }
     img {
       max-width: 100%;
       border-radius: 6px;
       margin-top: 0.8rem;
     }
-    .alt-box, .ocr-box {
-      margin-top: 1rem;
-    }
+    .alt-box { margin-top: 1rem; }
     textarea {
       width: 100%;
       min-height: 110px;
@@ -89,19 +89,28 @@
       cursor: pointer;
       font-size: 0.9rem;
     }
+    button.secondary { background: #6366f1; }
     button:disabled {
       background: #9ca3af;
       cursor: not-allowed;
     }
-    @media (max-width: 768px) {
-      .container { flex-direction: column; }
+    .error-box {
+      margin-top: 0.75rem;
+      padding: 0.6rem 0.75rem;
+      background: #fff1f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      display: none;
+      white-space: pre-wrap;
     }
+    @media (max-width: 768px) { .container { flex-direction: column; } }
   </style>
 </head>
 <body>
   <header>📸 웰컴금융그룹 AI Alt Generator</header>
 
-  <!-- Alt tag 필요성 설명 -->
   <div class="info-box">
     <h3>Alt tag란 무엇인가요?</h3>
     <p>
@@ -112,31 +121,12 @@
       - <strong>웹 접근성</strong>: 시각장애인 사용자는 <u>스크린 리더(Screen Reader)</u>를 통해 Alt tag를 들으며 이미지를 이해합니다.<br>
       - <strong>정보 전달</strong>: 이미지가 로딩되지 않더라도 Alt tag가 대신 표시되어 내용을 알 수 있습니다.<br>
       - <strong>검색엔진 최적화(SEO)</strong>: 검색엔진은 Alt tag를 참고해 이미지를 인덱싱하므로 노출 효과가 좋아집니다.<br>
-      - <strong>사용자 경험 개선</strong>: 웰컴금융그룹의 웰컴디지털뱅크, 인터넷뱅킹, 모바일뱅킹 등에서 이미지 의미를 정확히 전달할 수 있습니다.<br>
+      - <strong>사용자 경험 개선</strong>: 웰컴디지털뱅크·인터넷/모바일뱅킹 등에서 이미지 의미를 정확히 전달할 수 있습니다.<br>
       <br>
-      하지만 현실적으로 <strong>사람이 이미지마다 일일이 Alt tag를 직접 작성하는 것은 번거롭고 시간이 많이 걸립니다.</strong>  
-      그래서 많은 사이트에서 Alt tag가 비어 있거나 대충 작성되는 경우가 많습니다.
+      하지만 현실적으로 <strong>사람이 이미지마다 Alt tag를 직접 작성하는 것은 번거롭고 시간이 많이 듭니다.</strong>
       <br><br>
-      👉 <strong>이 웹앱은 AI를 활용해 이미지를 업로드하면 자동으로 Alt tag를 생성</strong>합니다.  
-      <u>이미지를 이해하는 멀티모달 AI</u> 방식 덕분에,  
-      단순한 이미지 설명이 아니라 <strong>실제 장면 + 텍스트까지 반영된 정확하고 풍부한 Alt tag</strong>를 제공합니다.
-    </p>
-  </div>
-
-  <!-- 동작 방식 + 모델 설명 -->
-  <div class="info-box">
-    <h3>이 웹앱은 어떻게 동작하나요?</h3>
-    <p>
-      사용자가 <strong>이미지를 업로드하면 자동으로 Alt tag가 생성</strong>됩니다.
-      <br><br>
-      동작 과정은 다음과 같습니다:
-    </p>
-    <p>
-      이 서비스는 <strong>알리바바 클라우드(Qwen 팀)</strong>이 개발한 <strong>Qwen2.5-VL</strong> 멀티모달 AI 모델을 사용합니다.<br>
-      별도의 OCR 단계를 거치지 않고, <strong>이미지 안의 글자와 장면을 동시에 인식</strong>하여 
-      100자 내외의 Alt tag를 자동으로 생성합니다.<br><br>
-      사용자는 단순히 이미지를 업로드하기만 하면 되며, 
-      Alt tag 작성의 번거로움을 크게 줄여줍니다.
+      👉 이 웹앱은 <strong>Qwen2.5-VL 멀티모달 AI</strong> 하나로
+      <u>이미지 속 글자와 장면을 동시에 인식</u>해 100자 내외 Alt tag를 자동 생성합니다.
     </p>
   </div>
 
@@ -148,17 +138,21 @@
       </div>
       <div id="preview"></div>
     </div>
+
     <div class="right">
       <h3>Alt tag 생성 결과</h3>
       <div class="alt-box">
         <textarea id="altText" readonly placeholder="이미지를 업로드하면 여기서 자동 생성됩니다."></textarea>
-        <button id="copyBtn" onclick="copyAlt()">복사하기</button>
+        <button id="copyBtn" class="secondary" onclick="copyAlt()" disabled>복사하기</button>
         <button id="regenBtn" onclick="regenerateAlt()" disabled>재생성</button>
+        <div id="errorBox" class="error-box"></div>
       </div>
     </div>
   </div>
 
   <script>
+    // 백엔드 베이스 URL 읽기
+    const BACKEND_URL = document.querySelector('meta[name="backend-url"]')?.content?.replace(/\/$/, "");
     let uploadedFile = null;
 
     const fileInput = document.getElementById("fileInput");
@@ -166,72 +160,104 @@
     const altText = document.getElementById("altText");
     const copyBtn = document.getElementById("copyBtn");
     const regenBtn = document.getElementById("regenBtn");
+    const errorBox = document.getElementById("errorBox");
+
+    function showError(msg) {
+      errorBox.style.display = "block";
+      errorBox.textContent = msg;
+    }
+    function clearError() {
+      errorBox.style.display = "none";
+      errorBox.textContent = "";
+    }
+
+    async function callGenerateAPI(file) {
+      if (!BACKEND_URL) {
+        throw new Error("백엔드 URL이 설정되어 있지 않습니다. <meta name='backend-url'>를 확인하세요.");
+      }
+      const fd = new FormData();
+      fd.append("image", file);
+
+      const res = await fetch(`${BACKEND_URL}/api/generate-alt`, {
+        method: "POST",
+        body: fd,
+      });
+
+      // 응답 본문을 에러 디버깅에 활용
+      const contentType = res.headers.get("content-type") || "";
+      if (!res.ok) {
+        const errText = contentType.includes("application/json")
+          ? JSON.stringify(await res.json())
+          : await res.text();
+        throw new Error(`API ${res.status}: ${errText}`);
+      }
+      return contentType.includes("application/json") ? res.json() : { altTag: await res.text() };
+    }
 
     fileInput.addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       uploadedFile = file;
 
+      // 미리보기
       const reader = new FileReader();
       reader.onload = () => {
         preview.innerHTML = `<img src="${reader.result}" alt="preview">`;
       };
       reader.readAsDataURL(file);
 
+      // 상태 초기화
+      clearError();
       altText.value = "⏳ 생성 중...";
       regenBtn.disabled = true;
       copyBtn.disabled = true;
 
       try {
-        const res = await fetch("/api/generate-alt", {   // 이 경로는 네트워크 설정 따라 조정 필요
-          method: "POST",
-          body: (() => {
-            const fd = new FormData();
-            fd.append("image", uploadedFile);
-            return fd;
-          })()
-        });
-        const data = await res.json();
+        const data = await callGenerateAPI(uploadedFile);
         altText.value = data.altTag || "생성 실패";
-        copyBtn.disabled = false;
         regenBtn.disabled = false;
+        copyBtn.disabled = !data.altTag;
       } catch (err) {
-        altText.value = "❌ 오류 발생";
         console.error(err);
+        altText.value = "❌ 오류 발생";
+        showError(String(err.message || err));
       }
     });
 
-    function copyAlt() {
-      altText.select();
-      document.execCommand("copy");
-      alert("Alt tag 복사됨 ✅");
-    }
-
     async function regenerateAlt() {
       if (!uploadedFile) return;
+      clearError();
       altText.value = "⏳ 새로 생성 중...";
       regenBtn.disabled = true;
       copyBtn.disabled = true;
-
       try {
-        const res = await fetch("/api/generate-alt", {
-          method: "POST",
-          body: (() => {
-            const fd = new FormData();
-            fd.append("image", uploadedFile);
-            return fd;
-          })()
-        });
-        const data = await res.json();
+        const data = await callGenerateAPI(uploadedFile);
         altText.value = data.altTag || "생성 실패";
       } catch (err) {
-        altText.value = "❌ 오류 발생";
         console.error(err);
+        altText.value = "❌ 오류 발생";
+        showError(String(err.message || err));
       } finally {
-        copyBtn.disabled = false;
         regenBtn.disabled = false;
+        copyBtn.disabled = !altText.value || altText.value.startsWith("❌");
       }
     }
+
+    async function copyAlt() {
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(altText.value || "");
+        } else {
+          altText.select();
+          document.execCommand("copy");
+        }
+        alert("Alt tag 복사됨 ✅");
+      } catch {
+        alert("복사 실패. 텍스트를 직접 선택해 복사하세요.");
+      }
+    }
+    window.regenerateAlt = regenerateAlt;
+    window.copyAlt = copyAlt;
   </script>
 </body>
 </html>

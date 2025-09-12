@@ -7,7 +7,13 @@ import { OpenAI } from "openai";
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
-app.use(cors());
+// 프론트 도메인으로 교체
+const FRONT_ORIGIN = "https://welcome-ai-alt-generator-frontend.onrender.com";
+
+app.use(cors({
+  origin: FRONT_ORIGIN,
+  methods: ["POST"],
+}));
 app.use(express.json());
 
 // Hugging Face Access Token (Render 환경 변수에 설정 필요)
