@@ -188,7 +188,7 @@
         ocrTextDiv.innerText = "⏳ OCR 텍스트 추출 중...";
 
         try {
-          const res = await fetch("http://localhost:3000/api/generate-alt", {
+          const res = await fetch("https://welcome-ai-alt-generator-backend.onrender.com/api/generate-alt", {
             method: "POST",
             body: formData
           });
