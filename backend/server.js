@@ -23,7 +23,7 @@ async function runOCR(imagePath) {
   const formData = new FormData();
   formData.append("image", fs.createReadStream(imagePath));
 
-  const res = await fetch(OCR_SERVICE_URL, {
+  const res = await fetch("https://welcome-ai-alt-generator-ocr.onrender.com/ocr", {
     method: "POST",
     body: formData,
   });
