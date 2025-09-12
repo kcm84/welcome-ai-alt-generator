@@ -13,14 +13,6 @@ def health():
 
 @app.route("/ocr", methods=["POST"])
 def run_ocr():
-    global ocr
-    if ocr is None:
-        # 첫 요청에서만 PaddleOCR 모델 로드 → Render에서 포트 타임아웃 방지
-        ocr = PaddleOCR(
-            lang='korean',
-            use_textline_orientation=True  # 최신 버전 권장 옵션
-        )
-
     if "image" not in request.files:
         return jsonify({"error": "No image uploaded"}), 400
 
@@ -34,9 +26,12 @@ def run_ocr():
     texts = []
     for res in results:
         for line in res:
-            texts.append(line[1][0])
+            texts.append(line[1][0])  # 각 줄 텍스트 추출
 
-    return jsonify({"ocr_text": " ".join(texts)})
+    return jsonify({
+        "ocr_texts": texts,                 # 모든 줄 텍스트 배열
+        "ocr_text_joined": " ".join(texts)  # 합친 텍스트 (백엔드에서 사용 가능)
+    })
 
 if __name__ == "__main__":
     # Render가 자동으로 PORT 환경변수를 지정

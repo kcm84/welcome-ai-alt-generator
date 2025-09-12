@@ -18,17 +18,26 @@ const client = new OpenAI({
   apiKey: HF_TOKEN,
 });
 
-// PaddleOCR API 호출
+// PaddleOCR 호출
 async function runOCR(imagePath) {
   const formData = new FormData();
   formData.append("image", fs.createReadStream(imagePath));
 
-  const res = await fetch("https://welcome-ai-alt-generator-ocr.onrender.com/ocr", {
+  const res = await fetch(OCR_SERVICE_URL, {
     method: "POST",
     body: formData,
   });
+
+  if (!res.ok) {
+    console.error("OCR API 오류:", res.status, await res.text());
+    return { texts: [], joined: "" };
+  }
+
   const data = await res.json();
-  return data.ocr_text || "";
+  return {
+    texts: data.ocr_texts || [],
+    joined: data.ocr_text_joined || ""
+  };
 }
 
 // Qwen 멀티모달 호출
@@ -63,13 +72,13 @@ async function runVLModel(imagePath, ocrText) {
   return chatCompletion.choices[0].message.content || "Alt tag 생성 실패";
 }
 
-// Alt tag API
+// Alt tag API 엔드포인트
 app.post("/api/generate-alt", upload.single("image"), async (req, res) => {
   try {
-    const ocrText = await runOCR(req.file.path);
-    const altTag = await runVLModel(req.file.path, ocrText);
+    const { texts, joined } = await runOCR(req.file.path);
+    const altTag = await runVLModel(req.file.path, joined);
     fs.unlinkSync(req.file.path);
-    res.json({ altTag });
+    res.json({ altTag, ocrTexts: texts });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Alt tag 생성 실패" });

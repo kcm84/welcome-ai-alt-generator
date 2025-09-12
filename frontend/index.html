@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>웰컴금융그룹 AI Alt Generator</title>
+  <title>Welcome AI Alt Generator</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -22,9 +22,9 @@
     .info-box {
       background: #eef2ff;
       color: #1e3a8a;
-      padding: 0.8rem;          /* 여백 축소 */
-      margin: 0.8rem;           /* 여백 축소 */
-      border-radius: 6px;       /* 더 컴팩트하게 */
+      padding: 0.8rem;
+      margin: 0.8rem;
+      border-radius: 6px;
       font-size: 0.92rem;
       line-height: 1.5;
     }
@@ -84,54 +84,22 @@
       border-radius: 6px;
       cursor: pointer;
     }
+    .ocr-box {
+      margin-top: 1rem;
+      background: #f3f4f6;
+      padding: 0.5rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: #111827;
+      white-space: pre-wrap;
+    }
     @media (max-width: 768px) {
       .container { flex-direction: column; }
     }
   </style>
 </head>
 <body>
-  <header>📸 웰컴금융그룹 AI Alt Generator</header>
-
-  <!-- Alt tag 필요성 설명 -->
-  <div class="info-box">
-    <h3>Alt tag란 무엇인가요?</h3>
-    <p>
-      Alt tag(대체 텍스트)는 이미지를 설명하는 문구로, 
-      <strong>웹 접근성</strong>과 <strong>검색엔진 최적화(SEO)</strong>에 중요한 역할을 합니다.
-      <br><br>
-      하지만 문제는, <strong>사람이 이미지마다 일일이 Alt tag를 직접 작성하는 것은 매우 번거롭고 시간이 많이 든다</strong>는 점입니다. 
-      이 웹앱은 그 불편함을 해결하기 위해 자동으로 Alt tag를 생성해 줍니다.
-    </p>
-  </div>
-
-  <!-- 동작 방식 + 모델 설명 -->
-  <div class="info-box">
-    <h3>이 웹앱은 어떻게 동작하나요?</h3>
-    <p>
-      사용자가 <strong>이미지를 업로드하면 자동으로 Alt tag가 생성</strong>됩니다.
-      <br><br>
-      동작 과정은 다음과 같습니다:
-    </p>
-    <ol>
-      <li>
-        <strong>텍스트 인식 (OCR)</strong>  
-        → <em>PaddleOCR (korean_PP-OCRv4_mobile)</em>  
-        → <strong>바이두(Baidu) PaddlePaddle 팀</strong> 개발  
-        → 이미지 속 한국어/영문 텍스트를 빠르고 정확하게 추출
-      </li>
-      <li>
-        <strong>이미지 장면 이해 & 설명 생성</strong>  
-        → <em>Qwen2.5-VL-7B-Instruct</em>  
-        → <strong>알리바바 클라우드(Qwen 팀)</strong> 개발  
-        → 이미지 장면과 OCR 텍스트를 결합해 자연스럽고 의미 있는 Alt tag 생성
-      </li>
-    </ol>
-    <p>
-      즉, <strong>OCR + 멀티모달 AI 하이브리드 구조</strong>를 통해  
-      단순히 이미지를 설명하는 것을 넘어서, 실제 이미지 속 텍스트까지 반영한  
-      더 정확하고 풍부한 Alt tag를 제공합니다.
-    </p>
-  </div>
+  <header>📸 Welcome AI Alt Generator</header>
 
   <div class="container">
     <!-- 왼쪽: 업로드 + 이미지 미리보기 -->
@@ -143,13 +111,16 @@
       <div id="preview"></div>
     </div>
 
-    <!-- 오른쪽: Alt tag 결과 -->
+    <!-- 오른쪽: Alt tag 결과 + OCR 텍스트 -->
     <div class="right">
       <h3>생성된 Alt tag</h3>
       <div class="alt-box">
         <textarea id="altText" readonly></textarea>
         <button class="copy-btn" onclick="copyAlt()">복사하기</button>
       </div>
+
+      <h3>OCR 추출 텍스트</h3>
+      <div id="ocrText" class="ocr-box">이미지 업로드 후 표시됩니다.</div>
     </div>
   </div>
 
@@ -157,8 +128,9 @@
     const fileInput = document.getElementById("fileInput");
     const preview = document.getElementById("preview");
     const altText = document.getElementById("altText");
+    const ocrTextDiv = document.getElementById("ocrText");
 
-    fileInput.addEventListener("change", (e) => {
+    fileInput.addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
@@ -167,8 +139,31 @@
         };
         reader.readAsDataURL(file);
 
-        // TODO: backend API 호출 → altText.value 업데이트
+        // Backend 호출
+        const formData = new FormData();
+        formData.append("image", file);
+
         altText.value = "⏳ Alt tag 생성 중...";
+        ocrTextDiv.innerText = "⏳ OCR 텍스트 추출 중...";
+
+        try {
+          const res = await fetch("http://localhost:3000/api/generate-alt", {
+            method: "POST",
+            body: formData
+          });
+          const data = await res.json();
+
+          altText.value = data.altTag || "Alt tag 생성 실패";
+          if (data.ocrTexts && data.ocrTexts.length > 0) {
+            ocrTextDiv.innerText = data.ocrTexts.join("\n");
+          } else {
+            ocrTextDiv.innerText = "텍스트가 감지되지 않았습니다.";
+          }
+        } catch (err) {
+          altText.value = "❌ Alt tag 생성 오류";
+          ocrTextDiv.innerText = "❌ OCR 오류";
+          console.error(err);
+        }
       }
     });
 
