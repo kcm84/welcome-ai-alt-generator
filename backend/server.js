@@ -3,6 +3,8 @@ import cors from "cors";
 import multer from "multer";
 import fs from "fs";
 import sharp from "sharp";
+import fetch from "node-fetch";
+import FormData from "form-data";
 import { OpenAI } from "openai";
 
 const app = express();
@@ -10,69 +12,63 @@ const upload = multer({ dest: "uploads/" });
 app.use(cors());
 app.use(express.json());
 
-// Hugging Face Access Token (Render 환경 변수에 설정 필요)
-// Render에서는 OPENAI_API_KEY로 등록하세요.
 const HF_TOKEN = process.env.OPENAI_API_KEY;
-
-// Hugging Face Router OpenAI 호환 클라이언트 생성
 const client = new OpenAI({
   baseURL: "https://router.huggingface.co/v1",
   apiKey: HF_TOKEN,
 });
 
-// Alt tag 생성 함수
-async function generateAltTag(imagePath) {
-  try {
-    // 이미지 크기 줄이기 (512px 폭, JPEG 변환)
-    const resizedBuffer = await sharp(imagePath)
-      .resize({ width: 512, withoutEnlargement: true })
-      .jpeg({ quality: 80 })
-      .toBuffer();
+// PaddleOCR API 호출
+async function runOCR(imagePath) {
+  const formData = new FormData();
+  formData.append("image", fs.createReadStream(imagePath));
 
-    // Base64 Data URI 변환
-    const base64Image = `data:image/jpeg;base64,${resizedBuffer.toString("base64")}`;
-
-    // Hugging Face Router 호출
-    const chatCompletion = await client.chat.completions.create({
-      model: "Qwen/Qwen2.5-VL-7B-Instruct:hyperbolic",
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text:
-                "당신은 OCR + 이미지 설명 전문가입니다.\n" +
-                "1. 이미지 안에 보이는 모든 글자를 빠짐없이 추출하세요.\n" +
-                "2. 글자가 없다면 이미지를 분석해서 100자 내외로 간단히 설명하세요."
-            },
-            { type: "image_url", image_url: { url: base64Image } },
-          ],
-        },
-      ],
-    });
-
-    return chatCompletion.choices[0].message.content || "Alt tag 생성 실패";
-  } catch (error) {
-    console.error(
-      "⚠️ Hugging Face Router API 호출 에러:",
-      error.response?.status,
-      error.response?.data || error.message
-    );
-    return "Alt tag 생성 중 오류 발생";
-  }
+  const res = await fetch("http://localhost:5001/ocr", {
+    method: "POST",
+    body: formData,
+  });
+  const data = await res.json();
+  return data.ocr_text || "";
 }
 
-// 헬스체크 라우트
-app.get("/", (req, res) => {
-  res.send("✅ Welcome AI Alt Generator backend is running (with OCR/Caption logic + Sharp resize)");
-});
+// Qwen 멀티모달 호출
+async function runVLModel(imagePath, ocrText) {
+  const resizedBuffer = await sharp(imagePath)
+    .resize({ width: 512 })
+    .jpeg({ quality: 80 })
+    .toBuffer();
 
-// Alt tag 생성 API
+  const base64Image = `data:image/jpeg;base64,${resizedBuffer.toString("base64")}`;
+
+  const messages = [
+    {
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: ocrText
+            ? `이미지에서 추출된 텍스트: "${ocrText}". 이를 참고하여 장면과 조합해 Alt tag를 100자 내외로 생성해 주세요.`
+            : "이 이미지를 설명하는 Alt tag를 100자 내외로 생성해 주세요.",
+        },
+        { type: "image_url", image_url: { url: base64Image } },
+      ],
+    },
+  ];
+
+  const chatCompletion = await client.chat.completions.create({
+    model: "Qwen/Qwen2.5-VL-7B-Instruct:hyperbolic",
+    messages,
+  });
+
+  return chatCompletion.choices[0].message.content || "Alt tag 생성 실패";
+}
+
+// Alt tag API
 app.post("/api/generate-alt", upload.single("image"), async (req, res) => {
   try {
-    const altTag = await generateAltTag(req.file.path);
-    fs.unlinkSync(req.file.path); // 임시 파일 삭제
+    const ocrText = await runOCR(req.file.path);
+    const altTag = await runVLModel(req.file.path, ocrText);
+    fs.unlinkSync(req.file.path);
     res.json({ altTag });
   } catch (err) {
     console.error(err);
@@ -80,6 +76,5 @@ app.post("/api/generate-alt", upload.single("image"), async (req, res) => {
   }
 });
 
-// 서버 실행
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 PaddleOCR+Qwen backend running on port ${PORT}`));
