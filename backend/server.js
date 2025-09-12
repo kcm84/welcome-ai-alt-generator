@@ -28,7 +28,7 @@ async function runKoTrOCR(imagePath) {
   const imageBytes = fs.readFileSync(imagePath);
 
   const response = await fetch(
-    "https://api-inference.huggingface.co/models/daekeun-ml/ko-trocr-base-nsmc-news-chatbot",
+    "https://api-inference.huggingface.co/models/daekeun-ml/ko-trocr-small",
     {
       method: "POST",
       headers: {
