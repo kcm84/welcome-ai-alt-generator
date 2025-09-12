@@ -10,13 +10,16 @@
       margin: 0; padding: 0;
       background: #f9fafb;
       color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
     header {
       background: #4f46e5;
       color: white;
       padding: 1rem;
       text-align: center;
-      font-size: 1.3rem;
+      font-size: 1.5rem;
       font-weight: bold;
     }
     .info-box {
@@ -25,10 +28,11 @@
       padding: 0.8rem;
       margin: 0.8rem;
       border-radius: 6px;
-      font-size: 0.92rem;
+      font-size: 0.95rem;
       line-height: 1.5;
     }
     .container {
+      flex: 1;
       display: flex;
       flex-wrap: wrap;
       gap: 1rem;
@@ -40,31 +44,31 @@
       background: white;
       border-radius: 6px;
       padding: 0.8rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
     .upload-section {
       text-align: center;
       margin-bottom: 0.8rem;
     }
-    input[type="file"] {
-      display: none;
-    }
     .upload-label {
       display: inline-block;
-      padding: 0.5rem 1rem;
+      padding: 0.6rem 1.2rem;
       background: #4f46e5;
       color: white;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 0.95rem;
+      font-size: 1rem;
+    }
+    input[type="file"] {
+      display: none;
     }
     img {
       max-width: 100%;
       border-radius: 6px;
       margin-top: 0.8rem;
     }
-    .alt-box {
-      margin-top: 0.8rem;
+    .alt-box, .ocr-box {
+      margin-top: 1rem;
     }
     textarea {
       width: 100%;
@@ -75,7 +79,7 @@
       font-size: 0.9rem;
       resize: none;
     }
-    button.copy-btn {
+    button {
       margin-top: 0.5rem;
       padding: 0.5rem 1rem;
       background: #22c55e;
@@ -83,15 +87,11 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      font-size: 0.9rem;
     }
-    .ocr-box {
-      margin-top: 1rem;
-      background: #f3f4f6;
-      padding: 0.5rem;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      color: #111827;
-      white-space: pre-wrap;
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
     }
     @media (max-width: 768px) {
       .container { flex-direction: column; }
@@ -132,7 +132,7 @@
       동작 과정은 다음과 같습니다:
     </p>
     <p>
-      이 서비스는 <strong>알리바바 클라우드(Qwen 팀)</strong> 개발한 <strong>Qwen2.5-VL</strong> 멀티모달 AI 모델을 사용합니다.<br>
+      이 서비스는 <strong>알리바바 클라우드(Qwen 팀)</strong>이 개발한 <strong>Qwen2.5-VL</strong> 멀티모달 AI 모델을 사용합니다.<br>
       별도의 OCR 단계를 거치지 않고, <strong>이미지 안의 글자와 장면을 동시에 인식</strong>하여 
       100자 내외의 Alt tag를 자동으로 생성합니다.<br><br>
       사용자는 단순히 이미지를 업로드하기만 하면 되며, 
@@ -141,7 +141,6 @@
   </div>
 
   <div class="container">
-    <!-- 왼쪽: 업로드 + 이미지 미리보기 -->
     <div class="left">
       <div class="upload-section">
         <label for="fileInput" class="upload-label">이미지 선택</label>
@@ -149,49 +148,56 @@
       </div>
       <div id="preview"></div>
     </div>
-
-    <!-- 오른쪽: Alt tag 결과 + OCR 텍스트 -->
     <div class="right">
-      <h3>생성된 Alt tag</h3>
+      <h3>Alt tag 생성 결과</h3>
       <div class="alt-box">
-        <textarea id="altText" readonly></textarea>
-        <button class="copy-btn" onclick="copyAlt()">복사하기</button>
+        <textarea id="altText" readonly placeholder="이미지를 업로드하면 여기서 자동 생성됩니다."></textarea>
+        <button id="copyBtn" onclick="copyAlt()">복사하기</button>
+        <button id="regenBtn" onclick="regenerateAlt()" disabled>재생성</button>
       </div>
     </div>
   </div>
 
   <script>
+    let uploadedFile = null;
+
     const fileInput = document.getElementById("fileInput");
     const preview = document.getElementById("preview");
     const altText = document.getElementById("altText");
+    const copyBtn = document.getElementById("copyBtn");
+    const regenBtn = document.getElementById("regenBtn");
 
     fileInput.addEventListener("change", async (e) => {
       const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          preview.innerHTML = `<img src="${reader.result}" alt="preview">`;
-        };
-        reader.readAsDataURL(file);
+      if (!file) return;
+      uploadedFile = file;
 
-        // Backend 호출
-        const formData = new FormData();
-        formData.append("image", file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        preview.innerHTML = `<img src="${reader.result}" alt="preview">`;
+      };
+      reader.readAsDataURL(file);
 
-        altText.value = "⏳ Alt tag 생성 중...";
+      altText.value = "⏳ 생성 중...";
+      regenBtn.disabled = true;
+      copyBtn.disabled = true;
 
-        try {
-          const res = await fetch("https://welcome-ai-alt-generator-backend.onrender.com/api/generate-alt", {
-            method: "POST",
-            body: formData
-          });
-          const data = await res.json();
-
-          altText.value = data.altTag || "Alt tag 생성 실패";
-        } catch (err) {
-          altText.value = "❌ Alt tag 생성 오류";
-          console.error(err);
-        }
+      try {
+        const res = await fetch("/api/generate-alt", {   // 이 경로는 네트워크 설정 따라 조정 필요
+          method: "POST",
+          body: (() => {
+            const fd = new FormData();
+            fd.append("image", uploadedFile);
+            return fd;
+          })()
+        });
+        const data = await res.json();
+        altText.value = data.altTag || "생성 실패";
+        copyBtn.disabled = false;
+        regenBtn.disabled = false;
+      } catch (err) {
+        altText.value = "❌ 오류 발생";
+        console.error(err);
       }
     });
 
@@ -199,6 +205,32 @@
       altText.select();
       document.execCommand("copy");
       alert("Alt tag 복사됨 ✅");
+    }
+
+    async function regenerateAlt() {
+      if (!uploadedFile) return;
+      altText.value = "⏳ 새로 생성 중...";
+      regenBtn.disabled = true;
+      copyBtn.disabled = true;
+
+      try {
+        const res = await fetch("/api/generate-alt", {
+          method: "POST",
+          body: (() => {
+            const fd = new FormData();
+            fd.append("image", uploadedFile);
+            return fd;
+          })()
+        });
+        const data = await res.json();
+        altText.value = data.altTag || "생성 실패";
+      } catch (err) {
+        altText.value = "❌ 오류 발생";
+        console.error(err);
+      } finally {
+        copyBtn.disabled = false;
+        regenBtn.disabled = false;
+      }
     }
   </script>
 </body>
