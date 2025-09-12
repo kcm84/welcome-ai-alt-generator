@@ -1,11 +1,19 @@
-from paddleocr import PaddleOCR
-from flask import Flask, request, jsonify
 import os
+from flask import Flask, request, jsonify
+from paddleocr import PaddleOCR
 
 app = Flask(__name__)
 
-# Korean OCR (PP-OCRv4_mobile)
-ocr = PaddleOCR(use_angle_cls=True, lang='korean', use_gpu=False)
+# PaddleOCR 초기화 (최신 버전 호환)
+# use_angle_cls → use_textline_orientation
+ocr = PaddleOCR(
+    lang='korean',
+    use_textline_orientation=True  # 최신 버전에서 권장되는 옵션
+)
+
+@app.route("/")
+def health():
+    return "OCR Service Running ✅"
 
 @app.route("/ocr", methods=["POST"])
 def run_ocr():
@@ -16,7 +24,8 @@ def run_ocr():
     temp_path = "temp.jpg"
     image_file.save(temp_path)
 
-    results = ocr.ocr(temp_path, cls=True)
+    results = ocr.ocr(temp_path)
+
     os.remove(temp_path)
 
     texts = []
