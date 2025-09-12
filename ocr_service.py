@@ -4,11 +4,8 @@ from paddleocr import PaddleOCR
 
 app = Flask(__name__)
 
-# 최신 PaddleOCR 초기화 (use_gpu 제거, use_textline_orientation 사용)
-ocr = PaddleOCR(
-    lang='korean',
-    use_textline_orientation=True
-)
+# OCR 모델 지연 초기화 (Lazy Load)
+ocr = None
 
 @app.route("/")
 def health():
@@ -16,6 +13,14 @@ def health():
 
 @app.route("/ocr", methods=["POST"])
 def run_ocr():
+    global ocr
+    if ocr is None:
+        # 첫 요청에서만 PaddleOCR 모델 로드 → Render에서 포트 타임아웃 방지
+        ocr = PaddleOCR(
+            lang='korean',
+            use_textline_orientation=True  # 최신 버전 권장 옵션
+        )
+
     if "image" not in request.files:
         return jsonify({"error": "No image uploaded"}), 400
 
@@ -24,7 +29,6 @@ def run_ocr():
     image_file.save(temp_path)
 
     results = ocr.ocr(temp_path)
-
     os.remove(temp_path)
 
     texts = []
@@ -35,5 +39,6 @@ def run_ocr():
     return jsonify({"ocr_text": " ".join(texts)})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5001))  # Render에서 지정하는 포트 사용
+    # Render가 자동으로 PORT 환경변수를 지정
+    port = int(os.environ.get("PORT", 5001))
     app.run(host="0.0.0.0", port=port)
