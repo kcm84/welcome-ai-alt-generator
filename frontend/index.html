@@ -3,70 +3,180 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>웰컴금융그룹 AI 프론티어 2차 챌린지</title>
-  <link rel="stylesheet" href="style.css">
+  <title>웰컴금융그룹 AI Alt Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #f9fafb;
+      color: #333;
+    }
+    header {
+      background: #4f46e5;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+    .info-box {
+      background: #eef2ff;
+      color: #1e3a8a;
+      padding: 0.8rem;          /* 여백 축소 */
+      margin: 0.8rem;           /* 여백 축소 */
+      border-radius: 6px;       /* 더 컴팩트하게 */
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 0.8rem;
+    }
+    .left, .right {
+      flex: 1;
+      min-width: 300px;
+      background: white;
+      border-radius: 6px;
+      padding: 0.8rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .upload-section {
+      text-align: center;
+      margin-bottom: 0.8rem;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .upload-label {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: #4f46e5;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    img {
+      max-width: 100%;
+      border-radius: 6px;
+      margin-top: 0.8rem;
+    }
+    .alt-box {
+      margin-top: 0.8rem;
+    }
+    textarea {
+      width: 100%;
+      min-height: 110px;
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      font-size: 0.9rem;
+      resize: none;
+    }
+    button.copy-btn {
+      margin-top: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: #22c55e;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    @media (max-width: 768px) {
+      .container { flex-direction: column; }
+    }
+  </style>
 </head>
 <body>
+  <header>📸 웰컴금융그룹 AI Alt Generator</header>
+
+  <!-- Alt tag 필요성 설명 -->
+  <div class="info-box">
+    <h3>Alt tag란 무엇인가요?</h3>
+    <p>
+      Alt tag(대체 텍스트)는 이미지를 설명하는 문구로, 
+      <strong>웹 접근성</strong>과 <strong>검색엔진 최적화(SEO)</strong>에 중요한 역할을 합니다.
+      <br><br>
+      하지만 문제는, <strong>사람이 이미지마다 일일이 Alt tag를 직접 작성하는 것은 매우 번거롭고 시간이 많이 든다</strong>는 점입니다. 
+      이 웹앱은 그 불편함을 해결하기 위해 자동으로 Alt tag를 생성해 줍니다.
+    </p>
+  </div>
+
+  <!-- 동작 방식 + 모델 설명 -->
+  <div class="info-box">
+    <h3>이 웹앱은 어떻게 동작하나요?</h3>
+    <p>
+      사용자가 <strong>이미지를 업로드하면 자동으로 Alt tag가 생성</strong>됩니다.
+      <br><br>
+      동작 과정은 다음과 같습니다:
+    </p>
+    <ol>
+      <li>
+        <strong>텍스트 인식 (OCR)</strong>  
+        → <em>PaddleOCR (korean_PP-OCRv4_mobile)</em>  
+        → <strong>바이두(Baidu) PaddlePaddle 팀</strong> 개발  
+        → 이미지 속 한국어/영문 텍스트를 빠르고 정확하게 추출
+      </li>
+      <li>
+        <strong>이미지 장면 이해 & 설명 생성</strong>  
+        → <em>Qwen2.5-VL-7B-Instruct</em>  
+        → <strong>알리바바 클라우드(Qwen 팀)</strong> 개발  
+        → 이미지 장면과 OCR 텍스트를 결합해 자연스럽고 의미 있는 Alt tag 생성
+      </li>
+    </ol>
+    <p>
+      즉, <strong>OCR + 멀티모달 AI 하이브리드 구조</strong>를 통해  
+      단순히 이미지를 설명하는 것을 넘어서, 실제 이미지 속 텍스트까지 반영한  
+      더 정확하고 풍부한 Alt tag를 제공합니다.
+    </p>
+  </div>
+
   <div class="container">
-    <h1>웰컴금융그룹 AI Alt Generator System</h1>
-    <section class="intro">
-      <h2>Alt tag란 무엇일까요?</h2>
-      <p>
-        Alt tag는 <strong>이미지의 대체 텍스트</strong>를 의미합니다.  
-        시각장애인이 스크린 리더를 사용할 때 이미지를 대신 설명해주고,  
-        이미지가 로딩되지 않을 경우 텍스트로 내용을 전달합니다.  
-      </p>
-      <p>
-        <strong>왜 중요할까요?</strong>
-      </p>
-      <ul>
-        <li><strong>웹 접근성:</strong> 시각장애인·저시력 사용자도 동일한 경험 제공</li>
-        <li><strong>SEO:</strong> 검색 엔진이 이미지를 이해하고 검색 노출에 도움</li>
-        <li><strong>UX:</strong> 네트워크 불안정 시에도 이미지 내용을 전달</li>
-      </ul>
-      <p>
-        하지만 Alt tag를 작성하는 일은 종종 번거롭습니다.  
-        이 도구는 이미지를 업로드하면 <strong>OCR로 텍스트를 추출</strong>하거나,  
-        텍스트가 없을 경우 <strong>이미지를 설명</strong>하여 Alt tag를 자동으로 생성해줍니다.
-      </p>
-    </section>
+    <!-- 왼쪽: 업로드 + 이미지 미리보기 -->
+    <div class="left">
+      <div class="upload-section">
+        <label for="fileInput" class="upload-label">이미지 선택</label>
+        <input type="file" id="fileInput" accept="image/*">
+      </div>
+      <div id="preview"></div>
+    </div>
 
-    <section class="model-info">
-      <h2>사용한 AI 모델</h2>
-      <p>
-        이 프로젝트에서는 <strong>알리바바 그룹</strong>이 개발한 <strong>Qwen2.5-VL-Instruct</strong> 모델을 사용합니다.  
-        이 모델은 <em>비전-언어 모델(Vision-Language Model, VLM)</em>로, 
-        이미지를 이해하고 텍스트를 읽는 능력(OCR)과, 이미지의 장면을 설명하는 능력을 동시에 가지고 있습니다.
-        따라서 사진 속 글자를 추출하거나, 텍스트가 없을 경우 장면을 분석해 자연스러운 설명을 생성할 수 있습니다.
-      </p>
-      <ul>
-        <li>📝 <strong>OCR 기능</strong>: 이미지 속 글자를 인식하여 추출</li>
-        <li>🖼️ <strong>이미지 설명</strong>: 텍스트가 없을 때 장면을 자연스럽게 설명</li>
-        <li>🌐 <strong>활용성</strong>: 웹 접근성과 SEO 개선에 바로 적용 가능</li>
-      </ul>
-      <p>
-        Alt tag 생성 과정에서 이 모델이 이미지를 분석하여 
-        <strong>100자 내외의 설명</strong>을 자동으로 생성합니다.
-      </p>
-    </section>
-
-    <hr>
-
-    <input type="file" id="imageInput" accept="image/*">
-    <button id="generateBtn">Alt tag 생성</button>
-
-    <div id="preview">
-      <img id="previewImage" src="" alt="">
-      <p><strong>생성된 Alt 텍스트:</strong></p>
-      <p id="altText"></p>
-
-      <div id="altTagBox" style="display:none;">
-        <p><strong>Alt tag 예시:</strong></p>
-        <code id="altTagCode"></code>
-        <button id="copyBtn">복사하기</button>
+    <!-- 오른쪽: Alt tag 결과 -->
+    <div class="right">
+      <h3>생성된 Alt tag</h3>
+      <div class="alt-box">
+        <textarea id="altText" readonly></textarea>
+        <button class="copy-btn" onclick="copyAlt()">복사하기</button>
       </div>
     </div>
   </div>
-  <script src="script.js"></script>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const preview = document.getElementById("preview");
+    const altText = document.getElementById("altText");
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          preview.innerHTML = `<img src="${reader.result}" alt="preview">`;
+        };
+        reader.readAsDataURL(file);
+
+        // TODO: backend API 호출 → altText.value 업데이트
+        altText.value = "⏳ Alt tag 생성 중...";
+      }
+    });
+
+    function copyAlt() {
+      altText.select();
+      document.execCommand("copy");
+      alert("Alt tag 복사됨 ✅");
+    }
+  </script>
 </body>
 </html>

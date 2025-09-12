@@ -28,7 +28,7 @@ def run_ocr():
     temp_path = "temp.jpg"
     image_file.save(temp_path)
 
-    results = ocr.ocr(temp_path)
+    results = ocr.predict(temp_path)
     os.remove(temp_path)
 
     texts = []
