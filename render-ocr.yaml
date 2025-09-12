@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: paddleocr-korean-service   # 서비스 이름 (변경 가능)
+    env: python
+    plan: free                       # Free 플랜 (Starter 이상 선택 가능)
+    buildCommand: pip install -r requirements.txt
+    startCommand: python ocr_service.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10
