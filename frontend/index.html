@@ -72,7 +72,7 @@
     .alt-box { margin-top: 1rem; }
     textarea {
       width: 100%;
-      min-height: 400px;
+      height: 100%;
       padding: 0.5rem;
       border-radius: 6px;
       border: 1px solid #ddd;
@@ -164,9 +164,9 @@
     <div class="right">
       <h3>Alt tag 생성 결과</h3>
       <div class="alt-box">
+        <textarea id="altText" readonly placeholder="이미지를 업로드하면 여기서 자동 생성됩니다."></textarea>
         <button id="copyBtn" class="secondary" onclick="copyAlt()" disabled>복사하기</button>
         <button id="regenBtn" onclick="regenerateAlt()" disabled>재생성</button>
-        <textarea id="altText" readonly placeholder="이미지를 업로드하면 여기서 자동 생성됩니다."></textarea>
         <div id="errorBox" class="error-box"></div>
       </div>
     </div>
