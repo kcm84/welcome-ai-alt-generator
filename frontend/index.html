@@ -130,7 +130,7 @@
       copyBtn.disabled = true;
 
       try {
-        const res = await fetch("/api/generate-alt", {
+        const res = await fetch("https://welcome-ai-alt-generator-backend.onrender.com/api/generate-alt", {
           method: "POST",
           body: (() => { const fd = new FormData(); fd.append("image", uploadedFile); return fd; })()
         });
