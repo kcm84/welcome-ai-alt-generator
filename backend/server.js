@@ -3,7 +3,6 @@ import cors from "cors";
 import multer from "multer";
 import fs from "fs";
 import sharp from "sharp";
-import { OpenAI } from "openai";
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
@@ -22,13 +21,7 @@ app.use(express.json());
 // Hugging Face Access Token (Render 환경변수에서 OPENAI_API_KEY로 등록 필요)
 const HF_TOKEN = process.env.OPENAI_API_KEY;
 
-// Hugging Face Router (OpenAI 호환) 클라이언트 생성
-const client = new OpenAI({
-  baseURL: "https://router.huggingface.co/v1",
-  apiKey: HF_TOKEN,
-});
-
-// Alt tag 자동 생성 프롬프트
+// Alt tag 생성 프롬프트
 const basePrompt = `
 당신은 Alt tag 생성 AI입니다.
 - 이미지 안의 모든 텍스트를 빠짐없이 추출하여 Alt tag에 포함하세요.
@@ -39,7 +32,7 @@ const basePrompt = `
 - 한국어로 작성하고 100자 내외로 표현하세요.
 `;
 
-// Alt tag 생성 함수
+// Alt tag 생성 함수 (Florence-2-large 호출)
 async function generateAltTag(imagePath) {
   try {
     // 이미지 크기 줄이기 (512px 폭, JPEG 변환)
@@ -51,29 +44,41 @@ async function generateAltTag(imagePath) {
     // Base64 Data URI 변환
     const base64Image = `data:image/jpeg;base64,${resizedBuffer.toString("base64")}`;
 
-    // Hugging Face Router 호출 (Florence-2-large 사용)
-    const chatCompletion = await client.chat.completions.create({
-      model: "microsoft/Florence-2-large", // ✅ Florence-2 모델 적용
-      messages: [
-        { role: "system", content: basePrompt },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "이 이미지에 맞는 Alt tag를 생성해 주세요." },
-            { type: "image_url", image_url: { url: base64Image } },
-          ],
+    // Hugging Face Inference API 직접 호출 (image-to-text 태스크)
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/microsoft/Florence-2-large",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${HF_TOKEN}`,
+          "Content-Type": "application/json",
         },
-      ],
-      max_tokens: 500,
-    });
-
-    return chatCompletion.choices[0].message.content || "Alt tag 생성 실패";
-  } catch (error) {
-    console.error(
-      "⚠️ Hugging Face Router API 호출 에러:",
-      error.response?.status,
-      error.response?.data || error.message
+        body: JSON.stringify({
+          inputs: base64Image,
+          parameters: { prompt: basePrompt },
+        }),
+      }
     );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ Florence-2 API 오류:", errorText);
+      return "Alt tag 생성 실패";
+    }
+
+    const result = await response.json();
+    console.log("Florence 결과:", result);
+
+    // Florence-2 결과 형식 맞추기
+    if (Array.isArray(result) && result[0]?.generated_text) {
+      return result[0].generated_text;
+    } else if (result.generated_text) {
+      return result.generated_text;
+    } else {
+      return "Alt tag 생성 실패";
+    }
+  } catch (error) {
+    console.error("⚠️ Florence-2 API 호출 에러:", error.message);
     return "Alt tag 생성 중 오류 발생";
   }
 }
