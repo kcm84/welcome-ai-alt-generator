@@ -233,12 +233,14 @@
       // 상태 초기화
       clearError();
       altText.value = "⏳ 생성 중...";
+      autoExpand(altText);
       regenBtn.disabled = true;
       copyBtn.disabled = true;
 
       try {
         const data = await callGenerateAPI(uploadedFile);
         altText.value = data.altTag || "생성 실패";
+        autoExpand(altText);
         regenBtn.disabled = false;
         copyBtn.disabled = !data.altTag;
       } catch (err) {
