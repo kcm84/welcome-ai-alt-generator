@@ -72,7 +72,7 @@
     .alt-box { margin-top: 1rem; }
     textarea {
       width: 100%;
-      height: 100%;
+      height: 100px;
       padding: 0.5rem;
       border-radius: 6px;
       border: 1px solid #ddd;
@@ -255,6 +255,7 @@
       try {
         const data = await callGenerateAPI(uploadedFile);
         altText.value = data.altTag || "생성 실패";
+        autoExpand(altText); // 자동 크기 조절
       } catch (err) {
         console.error(err);
         altText.value = "❌ 오류 발생";
@@ -278,6 +279,15 @@
         alert("복사 실패. 텍스트를 직접 선택해 복사하세요.");
       }
     }
+
+    // 텍스트 영역 자동 확장
+    function autoExpand(element) {
+      element.style.height = "auto"; // 초기화
+      element.style.height = element.scrollHeight + "px"; // 내용에 맞게 확장
+    }
+
+    altText.addEventListener("input", () => autoExpand(altText));
+
     window.regenerateAlt = regenerateAlt;
     window.copyAlt = copyAlt;
   </script>
