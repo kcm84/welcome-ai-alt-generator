@@ -50,7 +50,7 @@ async function generateAltTag(imagePath) {
 
     // Hugging Face Router 호출
     const chatCompletion = await client.chat.completions.create({
-      model: "Qwen/Qwen2.5-VL-32B-Instruct:hyperbolic",
+      model: "microsoft/Florence-2-large",
       messages: [
         {
           role: "system",
