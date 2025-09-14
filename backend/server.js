@@ -4,7 +4,7 @@ import multer from "multer";
 import fs from "fs";
 import sharp from "sharp";
 import { OpenAI } from "openai";
-import stringSimilarity from "string-similarity";
+import { getCloseMatches } from "diff-match-patch"; // 또는 difflib-js 같은 라이브러리
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
@@ -27,16 +27,22 @@ const client = new OpenAI({
   apiKey: HF_TOKEN,
 });
 
-// 📌 교정 사전 (추가 가능)
-const DICTIONARY = ["웰컴저축은행", "웰컴금융그룹", "웰컴디지털뱅크"];
+// 교정 사전
+const dictionary = ["웰컴저축은행", "웰컴금융그룹", "웰컴디지털뱅크"];
 
-// 문자열 교정 함수
+/**
+ * 단어 단위 교정 함수
+ * @param {string} text - Qwen 결과 텍스트
+ * @returns {string} 교정된 텍스트
+ */
 function correctText(text) {
-  const matches = stringSimilarity.findBestMatch(text, DICTIONARY);
-  if (matches.bestMatch.rating > 0.7) {
-    return matches.bestMatch.target;
-  }
-  return text;
+  return text
+    .split(/\s+/) // 공백 기준 단어 분리
+    .map((word) => {
+      const match = getCloseMatches(word, dictionary, 1, 0.8); 
+      return match.length > 0 ? match[0] : word;
+    })
+    .join(" "); // 다시 합치기
 }
 
 // 한자 제거 함수
@@ -109,10 +115,7 @@ async function generateAltTag(imagePath) {
 
     // 📌 후처리 단계
     result = removeChineseChars(result); // 한자 제거
-    result = result
-      .split(/\s+/) // 공백 단위 분할
-      .map((word) => correctText(word)) // 교정 적용
-      .join(" "); // 다시 문자열로 합침
+    result = correctText(result); // 교정
 
     return result;
   } catch (error) {
