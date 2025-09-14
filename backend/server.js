@@ -4,6 +4,7 @@ import multer from "multer";
 import fs from "fs";
 import sharp from "sharp";
 import { OpenAI } from "openai";
+import { correctText } from "./utils/correctText.js";
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
@@ -86,7 +87,15 @@ async function generateAltTag(imagePath) {
       ],
     });
 
-    return chatCompletion.choices[0].message.content || "Alt tag 생성 실패";
+    let result = chatCompletion.choices[0].message.content || "Alt tag 생성 실패";
+
+    // 👉 결과 보정 레이어 적용
+    result = result
+      .split(/\s+/) // 단어 단위 분리
+      .map(correctText) // 교정 적용
+      .join(" "); // 다시 합침
+
+    return result;
   } catch (error) {
     console.error(
       "⚠️ Hugging Face Router API 호출 에러:",
