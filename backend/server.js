@@ -4,6 +4,7 @@ import multer from "multer";
 import fs from "fs";
 import sharp from "sharp";
 import { OpenAI } from "openai";
+import stringSimilarity from "string-similarity";
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
