@@ -4,7 +4,7 @@ import multer from "multer";
 import fs from "fs";
 import sharp from "sharp";
 import { OpenAI } from "openai";
-import { getCloseMatches } from "diff-match-patch"; // 또는 difflib-js 같은 라이브러리
+import stringSimilarity from "string-similarity";
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
@@ -27,22 +27,20 @@ const client = new OpenAI({
   apiKey: HF_TOKEN,
 });
 
-// 교정 사전
-const dictionary = ["웰컴저축은행", "웰컴금융그룹", "웰컴디지털뱅크"];
-
 /**
  * 단어 단위 교정 함수
  * @param {string} text - Qwen 결과 텍스트
  * @returns {string} 교정된 텍스트
  */
 function correctText(text) {
-  return text
-    .split(/\s+/) // 공백 기준 단어 분리
-    .map((word) => {
-      const match = getCloseMatches(word, dictionary, 1, 0.8); 
-      return match.length > 0 ? match[0] : word;
-    })
-    .join(" "); // 다시 합치기
+  const dictionary = ["웰컴저축은행", "웰컴금융그룹", "웰컴디지털뱅크"];
+  const { bestMatch } = stringSimilarity.findBestMatch(text, dictionary);
+
+  // 유사도 임계값 (예: 0.7 이상일 때 교정)
+  if (bestMatch.rating >= 0.7) {
+    return bestMatch.target;
+  }
+  return text;
 }
 
 // 한자 제거 함수
