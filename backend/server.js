@@ -4,7 +4,6 @@ import multer from "multer";
 import fs from "fs";
 import sharp from "sharp";
 import { OpenAI } from "openai";
-import { correctText } from "./utils/correctText.js";
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
@@ -26,6 +25,23 @@ const client = new OpenAI({
   baseURL: "https://router.huggingface.co/v1",
   apiKey: HF_TOKEN,
 });
+
+// 📌 교정 사전 (추가 가능)
+const DICTIONARY = ["웰컴저축은행", "웰컴금융그룹", "웰컴디지털뱅크"];
+
+// 문자열 교정 함수
+function correctText(text) {
+  const matches = stringSimilarity.findBestMatch(text, DICTIONARY);
+  if (matches.bestMatch.rating > 0.7) {
+    return matches.bestMatch.target;
+  }
+  return text;
+}
+
+// 한자 제거 함수
+function removeChineseChars(text) {
+  return text.replace(/[\u4E00-\u9FFF]+/g, "");
+}
 
 // Alt tag 자동 분류 프롬프트
 const basePrompt = `
@@ -87,13 +103,15 @@ async function generateAltTag(imagePath) {
       ],
     });
 
-    let result = chatCompletion.choices[0].message.content || "Alt tag 생성 실패";
+    let result =
+      chatCompletion.choices[0].message.content || "Alt tag 생성 실패";
 
-    // 👉 결과 보정 레이어 적용
+    // 📌 후처리 단계
+    result = removeChineseChars(result); // 한자 제거
     result = result
-      .split(/\s+/) // 단어 단위 분리
-      .map(correctText) // 교정 적용
-      .join(" "); // 다시 합침
+      .split(/\s+/) // 공백 단위 분할
+      .map((word) => correctText(word)) // 교정 적용
+      .join(" "); // 다시 문자열로 합침
 
     return result;
   } catch (error) {
