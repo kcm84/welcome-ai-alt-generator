@@ -159,6 +159,7 @@
         <textarea id="altText" readonly placeholder="이미지를 업로드하면 자동 생성됩니다." style="overflow:hidden; resize:none; min-height:120px;"></textarea>
         <button id="copyBtn" class="secondary" onclick="copyAlt()" disabled>복사하기</button>
         <button id="regenBtn" onclick="regenerateAlt()" disabled>재생성</button>
+        <button id="readBtn" class="readAlt" onclick="readAlt()" disabled>ALT 읽기</button>
         <div id="errorBox" class="error-box"></div>
       </div>
     </div>
@@ -174,6 +175,7 @@
     const altText = document.getElementById("altText");
     const copyBtn = document.getElementById("copyBtn");
     const regenBtn = document.getElementById("regenBtn");
+    const readBtn = document.getElementById("readBtn");
     const errorBox = document.getElementById("errorBox");
 
     function showError(msg) {
@@ -226,6 +228,7 @@
       autoExpand(altText);
       regenBtn.disabled = true;
       copyBtn.disabled = true;
+      readBtn.disabled = true;
 
       try {
         const data = await callGenerateAPI(uploadedFile);
@@ -246,6 +249,7 @@
       altText.value = "⏳ 새로 생성 중...";
       regenBtn.disabled = true;
       copyBtn.disabled = true;
+      readBtn.disabled = true;
       try {
         const data = await callGenerateAPI(uploadedFile);
         altText.value = data.altTag || "생성 실패";
@@ -257,6 +261,7 @@
       } finally {
         regenBtn.disabled = false;
         copyBtn.disabled = !altText.value || altText.value.startsWith("❌");
+        readBtn.disabled = !altText.value || altText.value.startsWith("❌");
       }
     }
 
@@ -274,6 +279,13 @@
       }
     }
 
+    function readAlt(){
+      const text = altText.value || "ALT 태그가 없습니다.";
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang="ko-KR";
+      speechSynthesis.speak(utterance);
+    }
+
     // 텍스트 영역 자동 확장
     function autoExpand(element) {
       element.style.height = "auto"; // 초기화
@@ -284,9 +296,10 @@
 
     window.regenerateAlt = regenerateAlt;
     window.copyAlt = copyAlt;
+    window.readAlt = readAlt;
   </script>
 
-  
+
   <!-- <div class="container">
     <div class="left">
       <div class="upload-section">
