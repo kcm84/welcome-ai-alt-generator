@@ -261,7 +261,7 @@
       } finally {
         regenBtn.disabled = false;
         copyBtn.disabled = !altText.value || altText.value.startsWith("❌");
-        readBtn.disabled = !altText.value || altText.value.startsWith("❌");
+        readBtn.disabled = copyBtn.disabled
       }
     }
 
