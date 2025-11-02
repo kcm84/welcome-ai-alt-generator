@@ -144,7 +144,7 @@
     </p>
   </div>
 
-  <div class="container">
+  <!-- <div class="container">
     <div class="left">
       <div class="upload-section">
         <label for="fileInput" class="upload-label">이미지 선택</label>
@@ -284,6 +284,141 @@
 
     window.regenerateAlt = regenerateAlt;
     window.copyAlt = copyAlt;
+  </script> -->
+  <div class="container">
+    <div class="left">
+      <div class="upload-section">
+        <label for="fileInput" class="upload-label">이미지 선택</label>
+        <input type="file" id="fileInput" accept="image/*">
+      </div>
+      <div id="preview"></div>
+    </div>
+
+    <div class="right">
+      <h3>Alt tag 생성 결과</h3>
+      <div class="alt-box">
+        <textarea id="altText" readonly placeholder="이미지를 업로드한 뒤 [ALT 생성하기] 버튼을 누르세요."></textarea>
+        <button id="generateBtn" onclick="generateAlt()" disabled>ALT 생성하기</button>
+        <button id="regenBtn" onclick="regenerateAlt()" disabled>재생성</button>
+        <button id="copyBtn" class="secondary" onclick="copyAlt()" disabled>복사하기</button>
+        <div id="errorBox" class="error-box"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BACKEND_URL = document.querySelector('meta[name="backend-url"]')?.content?.replace(/\/$/, "");
+    let uploadedFile = null;
+
+    const fileInput = document.getElementById("fileInput");
+    const preview = document.getElementById("preview");
+    const altText = document.getElementById("altText");
+    const generateBtn = document.getElementById("generateBtn");
+    const regenBtn = document.getElementById("regenBtn");
+    const copyBtn = document.getElementById("copyBtn");
+    const errorBox = document.getElementById("errorBox");
+
+    function showError(msg) {
+      errorBox.style.display = "block";
+      errorBox.textContent = msg;
+    }
+    function clearError() {
+      errorBox.style.display = "none";
+      errorBox.textContent = "";
+    }
+
+    async function callGenerateAPI(file) {
+      if (!BACKEND_URL) throw new Error("백엔드 URL이 설정되어 있지 않습니다.");
+      const fd = new FormData();
+      fd.append("image", file);
+
+      const res = await fetch(`${BACKEND_URL}/api/generate-alt`, { method: "POST", body: fd });
+      const contentType = res.headers.get("content-type") || "";
+      if (!res.ok) {
+        const errText = contentType.includes("application/json")
+          ? JSON.stringify(await res.json())
+          : await res.text();
+        throw new Error(`API ${res.status}: ${errText}`);
+      }
+      return contentType.includes("application/json") ? res.json() : { altTag: await res.text() };
+    }
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      uploadedFile = file;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        preview.innerHTML = `<img id="previewImg" src="${reader.result}" alt="">`;
+      };
+      reader.readAsDataURL(file);
+
+      // 버튼 상태 초기화
+      clearError();
+      altText.value = "";
+      generateBtn.disabled = false;
+      regenBtn.disabled = true;
+      copyBtn.disabled = true;
+    });
+
+    async function generateAlt() {
+      if (!uploadedFile) return;
+      clearError();
+      altText.value = "⏳ ALT 생성 중...";
+      generateBtn.disabled = true;
+      regenBtn.disabled = true;
+      copyBtn.disabled = true;
+
+      try {
+        const data = await callGenerateAPI(uploadedFile);
+        altText.value = data.altTag || "생성 실패";
+        document.getElementById("previewImg").alt = altText.value; // 이미지에 alt 적용
+        regenBtn.disabled = false;
+        copyBtn.disabled = !data.altTag;
+      } catch (err) {
+        console.error(err);
+        altText.value = "❌ 오류 발생";
+        showError(String(err.message || err));
+      } finally {
+        generateBtn.disabled = false;
+      }
+    }
+
+    async function regenerateAlt() {
+      if (!uploadedFile) return;
+      clearError();
+      altText.value = "⏳ 새로 생성 중...";
+      regenBtn.disabled = true;
+      copyBtn.disabled = true;
+
+      try {
+        const data = await callGenerateAPI(uploadedFile);
+        altText.value = data.altTag || "생성 실패";
+        document.getElementById("previewImg").alt = altText.value;
+      } catch (err) {
+        console.error(err);
+        altText.value = "❌ 오류 발생";
+        showError(String(err.message || err));
+      } finally {
+        regenBtn.disabled = false;
+        copyBtn.disabled = !altText.value || altText.value.startsWith("❌");
+      }
+    }
+
+    async function copyAlt() {
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(altText.value || "");
+        } else {
+          altText.select();
+          document.execCommand("copy");
+        }
+        alert("Alt tag 복사됨 ✅");
+      } catch {
+        alert("복사 실패. 텍스트를 직접 선택해 복사하세요.");
+      }
+    }
   </script>
 </body>
 </html>
