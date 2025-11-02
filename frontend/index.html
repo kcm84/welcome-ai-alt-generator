@@ -236,6 +236,7 @@
         autoExpand(altText);
         regenBtn.disabled = false;
         copyBtn.disabled = !data.altTag;
+        readBtn.disabled = !data.altTag;
       } catch (err) {
         console.error(err);
         altText.value = "❌ 오류 발생";
@@ -261,7 +262,7 @@
       } finally {
         regenBtn.disabled = false;
         copyBtn.disabled = !altText.value || altText.value.startsWith("❌");
-        readBtn.disabled = copyBtn.disabled
+        readBtn.disabled = !altText.value || altText.value.startsWith("❌");
       }
     }
 
