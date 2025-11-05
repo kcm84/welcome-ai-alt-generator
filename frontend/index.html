@@ -9,6 +9,24 @@
   <meta name="backend-url" content="https://welcome-ai-alt-generator-backend.onrender.com">
 
   <style>
+    header {
+      background: #c0392b;
+      color: white;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    header img {
+      height: 36px; /* 👈 로고 크기 작게 */
+      width: auto;
+      object-fit: contain;
+      margin-bottom: 12px;
+    }
     body {
       font-family: Arial, sans-serif;
       margin: 0; padding: 0;
@@ -18,14 +36,14 @@
       flex-direction: column;
       min-height: 100vh;
     }
-    header {
+    /*header {
       background: #c0392b;
       color: white;
       padding: 1rem;
       text-align: center;
       font-size: 1.5rem;
       font-weight: bold;
-    }
+    }*/
     .info-box {
       background: #eef2ff;
       color: #1e3a8a;
@@ -111,7 +129,10 @@
   </style>
 </head>
 <body>
-  <header>📸 웰컴금융그룹 AI Alt Generator</header>
+  <header>
+    <img src="logo.jpg" alt="웰컴금융그룹 로고">
+    <span>웰컴금융그룹 AI ALT 태그 생성기</span>
+  </header>
 
   <div class="info-box">
     <!-- <h3>Alt tag란 무엇인가요?</h3>
@@ -131,9 +152,9 @@
       그래서 많은 사이트에서 Alt tag가 비어 있거나 대충 작성되는 경우가 많습니다.
     </p> -->
     <p>
-      👉 <strong>이 웹앱은 AI를 활용해 이미지를 업로드하면 자동으로 Alt tag를 생성</strong>합니다.  
-      <u>이미지를 이해하는 멀티모달 AI</u> 방식 덕분에,  
-      단순한 이미지 설명이 아니라 <strong>이미지 안의 글자와 장면을 동시에 인식하여 정확하고 풍부한 Alt tag</strong>를 제공합니다.
+      👉 <strong>이미지를 업로드하면 AI를 활용해 자동으로 Alt tag를 생성</strong>합니다.  
+      <!-- <u>이미지를 이해하는 멀티모달 AI</u> 방식 덕분에,  
+      단순한 이미지 설명이 아니라 <strong>이미지 안의 글자와 장면을 동시에 인식하여 정확하고 풍부한 Alt tag</strong>를 제공합니다. -->
     </p>
     <!-- <p>
       ⚠️ 이 웹앱은 <strong>공모전 프로토타입</strong>으로 제작되었습니다.  
