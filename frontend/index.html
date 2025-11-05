@@ -178,7 +178,7 @@
       <h3>Alt tag 생성 결과</h3>
       <div class="alt-box">
         <textarea id="altText" readonly placeholder="이미지를 업로드하면 자동 생성됩니다." style="overflow:hidden; resize:none; min-height:120px;"></textarea>
-        <button id="copyBtn" class="secondary" onclick="copyAlt()" disabled>복사하기</button>
+        <!-- <button id="copyBtn" class="secondary" onclick="copyAlt()" disabled>복사하기</button> -->
         <button id="regenBtn" onclick="regenerateAlt()" disabled>재생성</button>
         <button id="readBtn" class="readAlt" onclick="readAlt()" disabled>ALT 읽기</button>
         <div id="errorBox" class="error-box"></div>
@@ -194,7 +194,7 @@
     const fileInput = document.getElementById("fileInput");
     const preview = document.getElementById("preview");
     const altText = document.getElementById("altText");
-    const copyBtn = document.getElementById("copyBtn");
+    // const copyBtn = document.getElementById("copyBtn");
     const regenBtn = document.getElementById("regenBtn");
     const readBtn = document.getElementById("readBtn");
     const errorBox = document.getElementById("errorBox");
@@ -248,7 +248,7 @@
       altText.value = "⏳ 생성 중...";
       autoExpand(altText);
       regenBtn.disabled = true;
-      copyBtn.disabled = true;
+      // copyBtn.disabled = true;
       readBtn.disabled = true;
 
       try {
@@ -256,7 +256,7 @@
         altText.value = data.altTag || "생성 실패";
         autoExpand(altText);
         regenBtn.disabled = false;
-        copyBtn.disabled = !data.altTag;
+        // copyBtn.disabled = !data.altTag;
         readBtn.disabled = !data.altTag;
       } catch (err) {
         console.error(err);
@@ -270,7 +270,7 @@
       clearError();
       altText.value = "⏳ 새로 생성 중...";
       regenBtn.disabled = true;
-      copyBtn.disabled = true;
+      // copyBtn.disabled = true;
       readBtn.disabled = true;
       try {
         const data = await callGenerateAPI(uploadedFile);
@@ -282,7 +282,7 @@
         showError(String(err.message || err));
       } finally {
         regenBtn.disabled = false;
-        copyBtn.disabled = !altText.value || altText.value.startsWith("❌");
+        // copyBtn.disabled = !altText.value || altText.value.startsWith("❌");
         readBtn.disabled = !altText.value || altText.value.startsWith("❌");
       }
     }
